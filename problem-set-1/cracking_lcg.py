@@ -1,5 +1,6 @@
 import functools
 import itertools
+import subprocess
 
 import utils
 
@@ -48,20 +49,36 @@ def solve_with_all_unknown(samples):
 
 
 def zip_many(iterable, size):
-  return zip(*(iterable[idx:] for idx in range(size)))
+  return zip(*(tuple(iterable)[idx:] for idx in range(size)))
 
 
-def main():
-  number_generator = LCG(123123123123)
-  samples = list(itertools.islice(number_generator, 0,
-                                  10000000))  # Five samples.
+def _get_glibc_output(size, seed=1):
+  proc = subprocess.Popen(
+      ['./glibc_random', str(size), str(seed)], stdout=subprocess.PIPE)
+  out, _ = proc.communicate()
+  return [int(num) for num in out.decode('utf-8').split('\n') if num]
 
-  for sample_set in zip_many(
-      itertools.islice(number_generator, 0, 10000000), 32):
+
+def cracking_custom_lcg():
+  number_generator = LCG(123)
+  for sample_set in zip_many(itertools.islice(number_generator, 0, 1000), 32):
     modulus, multiplier, increment = solve_with_all_unknown(sample_set)
     assert increment == LCG.increment
     assert multiplier == LCG.multiplier
     assert modulus == LCG.modulus
+
+
+def cracking_glibc_random():
+  samples = _get_glibc_output(30)
+  for sample_set in zip_many(samples, 10):
+    modulus, multiplier, increment = solve_with_all_unknown(sample_set)
+    assert increment == LCG.increment
+    assert multiplier == LCG.multiplier
+    assert modulus == LCG.modulus
+
+
+def main():
+  cracking_glibc_random()
 
 
 if __name__ == "__main__":
