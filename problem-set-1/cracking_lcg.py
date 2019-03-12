@@ -53,8 +53,8 @@ def zip_many(iterable, size):
 
 
 def _get_glibc_output(size, seed=1):
-  proc = subprocess.Popen(
-      ['./glibc_random', str(size), str(seed)], stdout=subprocess.PIPE)
+  proc = subprocess.Popen(['./glibc_random', str(size)],
+                          stdout=subprocess.PIPE)
   out, _ = proc.communicate()
   return [int(num) for num in out.decode('utf-8').split('\n') if num]
 
@@ -69,12 +69,13 @@ def cracking_custom_lcg():
 
 
 def cracking_glibc_random():
-  samples = _get_glibc_output(30)
-  for sample_set in zip_many(samples, 10):
+  samples = _get_glibc_output(1000)
+  for sample_set in zip_many(samples, 16):
     modulus, multiplier, increment = solve_with_all_unknown(sample_set)
-    assert increment == LCG.increment
-    assert multiplier == LCG.multiplier
-    assert modulus == LCG.modulus
+    # assert increment == LCG.increment
+    # assert multiplier == LCG.multiplier
+    # assert modulus == LCG.modulus
+    print(sample_set)
 
 
 def main():
