@@ -18,7 +18,4 @@ def modinv(num, modular):
   g, x, _ = xgcd(num, modular)
   if g == 1:
     return x % modular
-  else:
-    import pdb
-    pdb.set_trace()
-    raise ValueError("Unable to calculate modular inverse.")
+  raise ValueError("Unable to calculate modular inverse.")

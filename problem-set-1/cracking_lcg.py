@@ -49,40 +49,6 @@ def solve_with_all_unknown(samples):
       modulus, samples)
   return modulus, multiplier, increment
 
-def is_valid(outputs, shifts, index):
-  r_i = (outputs[index] << 1) + shifts[index]
-  r_i_28 = (outputs[index + 28] << 1) + shifts[index + 28]
-  r_i_31 = (r_i + r_i_28) % CONST_2_32
-  o_i_31 = r_i_31 >> 1
-  is_same = o_i_31 == outputs[index + 31]
-  return is_same
-
-
-def calc_next(outputs, shifts, first_unknown):
-  if first_unknown == 28:
-    return shifts[:31]
-    # import pdb; pdb.set_trace()
-    # return shifts.copy() # what to return?
-
-  for first, sec in ((0, 0), (0, 1), (1, 1), (1, 0)):
-    shifts = shifts.copy()
-    shifts[first_unknown] = first
-    shifts[first_unknown + 28] = sec
-    if is_valid(outputs, shifts, first_unknown):
-      value = calc_next(outputs, shifts, first_unknown + 1)
-      return value
-      # import pdb; pdb.set_trace()
-  else:
-    import pdb; pdb.set_trace()
-  return False
-    # else:
-    #   shifts[first_unknown] =
-
-# samples to verify
-# [1801979802, 1315634022, 635723058, 1369133069, 1125898167, 1059961393, 2089018456, 628175011, 1656478042, 1131176229]
-# (Pdb++) predicted_nums
-# [1801979802, 1315634021, 635723058, 1369133069, 1125898166, 1059961393, 2089018455, 628175010, 1656478042, 1131176228]
-
 
 def verify(outputs, index, s, s_3, s_31):
   index = -(index + 1)
@@ -94,7 +60,7 @@ def verify(outputs, index, s, s_3, s_31):
 POSSIBLE_TRIPLETS = ((0, 1, 1), (1, 0, 1), (0, 0, 0), (1, 1, 0))
 
 def glibc_predictor(outputs):
-  cases = [([None for _ in range(34)], 0)]
+  cases = [([], 0)]
   results = None
   max_index = len(outputs) - 33 + 1
   while cases:
