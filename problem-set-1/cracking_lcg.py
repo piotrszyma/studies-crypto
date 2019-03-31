@@ -4,17 +4,13 @@ import subprocess
 
 import utils
 
+CONST_2_32 = 2**32
 
-CONST_2_32 = 2 ** 32
 
 class LCG:
   multiplier = 1103515245
   increment = 12345
   modulus = 2**31
-
-  # multiplier = 672257317069504227
-  # increment = 7382843889490547368
-  # modulus = 9223372036854775783
 
   def __init__(self, seed):
     self.state = seed
@@ -57,7 +53,9 @@ def verify(outputs, index, s, s_3, s_31):
   x = (outputs[index] << 1) + s
   return (x_31 + x_3) % CONST_2_32 == x % CONST_2_32
 
+
 POSSIBLE_TRIPLETS = ((0, 1, 1), (1, 0, 1), (0, 0, 0), (1, 1, 0))
+
 
 def glibc_predictor(outputs):
   cases = [([], 0)]
@@ -70,7 +68,8 @@ def glibc_predictor(outputs):
     if index == max_index:
       result = shifts[:max_index][::-1]
       last_outputs = outputs[-max_index:]
-      random_seed = [(out << 1) + shift for out, shift in zip(last_outputs, result)]
+      random_seed = [(out << 1) + shift
+                     for out, shift in zip(last_outputs, result)]
       results = random_seed
       continue
 
@@ -109,8 +108,8 @@ def zip_many(iterable, size):
 
 
 def _get_glibc_output(size, seed=1):
-  proc = subprocess.Popen(['./glibc_random', str(size), str(seed)],
-                          stdout=subprocess.PIPE)
+  proc = subprocess.Popen(
+      ['./glibc_random', str(size), str(seed)], stdout=subprocess.PIPE)
   out, _ = proc.communicate()
   return [int(num) for num in out.decode('utf-8').split('\n') if num]
 
@@ -131,7 +130,8 @@ def cracking_glibc_random():
     for pred_size in range(88, 123):
       for_predictor = glibc_randoms[:pred_size]
       to_compare = glibc_randoms[pred_size:]
-      for original, predicted in zip(to_compare, glibc_predictor(for_predictor)):
+      for original, predicted in zip(to_compare,
+                                     glibc_predictor(for_predictor)):
         try:
           assert original == predicted
         except AssertionError:
@@ -139,6 +139,7 @@ def cracking_glibc_random():
           break
       else:
         print(f'Success (seed: {seed}) for {pred_size}')
+
 
 def main():
   cracking_glibc_random()
