@@ -1,3 +1,5 @@
+// Based on http://www.pcg-random.org/posts/how-to-test-with-testu01.html
+
 #include <iostream>
 #include <array>
 #include <vector>
@@ -49,9 +51,17 @@ int main()
 {
   KSA(N_VALUE, N_VALUE);
 
-  for (int i = 0; i < 10; i++) {
-    std::cout << PRGA() << "\n";
-  }
+  // for (int i = 0; i < 10; i++) {
+  //   std::cout << PRGA() << "\n";
+  // }
 
+  // Create TestU01 PRNG object for our generator
+  unif01_Gen* gen = unif01_CreateExternGenBits("RC4 mdrop", PRGA);
+
+  // Run the tests.
+  bbattery_SmallCrush(gen);
+
+  // Clean up.
+  unif01_DeleteExternGenBits(gen);
   return 0;
 }
