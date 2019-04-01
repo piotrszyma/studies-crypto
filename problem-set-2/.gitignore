@@ -1,2 +1,5 @@
 .swp
 out
+*.out
+*.o
+test_data/

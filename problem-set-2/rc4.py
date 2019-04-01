@@ -44,7 +44,6 @@ class RC4:
     for i in range(0, T + 1):
       j = (j + S[i % N] + self.key[i % self.L]) % N
       S[i % N], S[j % N] = S[j % N], S[i % N]
-
     self.S = S
 
   def PRGA(self, N: int) -> Generator:
@@ -54,7 +53,7 @@ class RC4:
       N (int): number to divide modulo by.
 
     Returns:
-      Generator: pseudorandom generator.
+      Generator: Pseudorandom generator.
     """
 
     i = 0
@@ -78,7 +77,7 @@ def main():
 
   parser = argparse.ArgumentParser()
   parser.add_argument('-n', type=int, default=256)
-  parser.add_argument('-t', choices=T_MODES, default=T_MODE_N)
+  parser.add_argument('--mode', '-m', choices=T_MODES, default=T_MODE_N)
   parser.add_argument('-l', '--key-len', type=int, default=256)
   parser.add_argument('-d', type=int, default=8)
   parser.add_argument('-s', '--size', type=int, default=100)
@@ -92,7 +91,7 @@ def main():
     key = [random.getrandbits(8) for _ in range(args.key_len)]
 
   N = args.n
-  T = int(T_MODES[args.t](args.n))
+  T = int(T_MODES[args.mode](args.n))
 
   rc4 = RC4(key)
   rc4.KSA(N, T)
