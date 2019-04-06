@@ -66,6 +66,11 @@ class RC4:
       S[i], S[j] = S[j], S[i]
       yield S[(S[i] + S[j]) % N]
 
+def PRGA_32BIT(mdrop_PRGA):
+  while True:
+    # 2 * 32
+    yield (next(mdrop_PRGA) << 16) + (next(mdrop_PRGA) << 8) + next(mdrop_PRGA)
+
 def main():
   T_MODE_N = 'n'
   T_MODE_2NLOGN = 'log'
@@ -97,7 +102,7 @@ def main():
   rc4.KSA(N, T)
   prng = rc4.PRGA(N)
 
-  for num, _ in zip(mdrop(prng, args.d), range(args.size)):
+  for num, _ in zip(PRGA_32BIT(mdrop(prng, args.d)), range(args.size)):
     print(num)
 
 

@@ -3,3 +3,5 @@
 **/*/__pycache__/
 **/*/*.pyc
 glibc_random
+.DS_Store/
+DS_Store
