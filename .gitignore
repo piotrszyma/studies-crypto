@@ -5,3 +5,5 @@
 glibc_random
 .DS_Store/
 DS_Store
+.DS_Store
+out*
