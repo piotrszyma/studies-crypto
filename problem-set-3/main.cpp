@@ -1,13 +1,46 @@
 #include <iostream>
 #include <stdexcept>
+#include <functional>
+#include <fstream>
 #include <boost/program_options.hpp>
+
 #include <openssl/conf.h>
 #include <openssl/evp.h>
-#include <openssl/err.h>
 #include <openssl/aes.h>
+#include <openssl/pem.h>
+#include <openssl/err.h>
+#include <openssl/pkcs12.h>
 
 namespace po = boost::program_options;
 const static unsigned char aes_key[]={0x00,0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x88,0x99,0xAA,0xBB,0xCC,0xDD,0xEE,0xFF};
+
+
+std::vector<char> read_file_bytes(std::string filepath) {
+  std::ifstream ifstream_object(filepath, std::ifstream::binary | std::ifstream::ate);
+  std::ifstream::pos_type position = ifstream_object.tellg();
+  std::vector<char> result(position);
+  ifstream_object.seekg(0, std::ifstream::beg);
+  ifstream_object.read(&result[0], position);
+  return result;
+}
+
+void read_secret_key(std::string filepath) {
+  FILE *fp;
+  PKCS12 *p12;
+  EVP_PKEY *pkey = NULL;
+  // X509 *cert = NULL;
+  // STACK_OF(X509) *ca = NULL;
+  OpenSSL_add_all_algorithms(); // TODO: Move it to some crypto_init method?
+  if ((fp = fopen("teststore.pkcs12", "rb")) == NULL) {
+      std::cout << "Failed to open teststore." << std::endl;
+  } else {
+      std::cout << "Test store opened." << std::endl;
+  }
+  p12 = d2i_PKCS12_fp(fp, NULL);
+  PKCS12_free(p12);
+  PKCS12_parse(p12, "testpass", &pkey, NULL, NULL);
+  fclose(fp);
+}
 
 
 void encrypt_AES_cbc_encrypt() {
@@ -65,7 +98,7 @@ po::variables_map parse_arguments(int argc, char const *argv[]) {
 }
 
 
-void encrypt_mode(const std::string mode) {
+std::function<void(void)> encrypt_mode(const std::string mode) {
   if (mode == "openssl_aes_cbc") {
     return encrypt_AES_cbc_encrypt;
   } else {
@@ -76,9 +109,10 @@ void encrypt_mode(const std::string mode) {
 
 int main(const int argc, const char *argv[])
 {
-  po::variables_map vm = parse_arguments(argc, argv);
-  if (vm.count("help")) return 0;
-  const std::string mode = vm["mode"].as<std::string>();
-  encrypt_mode(mode);
+  read_secret_key("test");
+  // po::variables_map vm = parse_arguments(argc, argv);
+  // if (vm.count("help")) return 0;
+  // const std::string mode = vm["mode"].as<std::string>();
+  // std::function<void(void)> encryption_function = encrypt_mode(mode);
   return 0;
 }
