@@ -10,6 +10,8 @@ import os
 
 from typing import Text
 
+import crypto_libs
+
 STORE_PASS = 'testpass'
 STORE_PATH = 'teststore.p12'
 SECRET_LEN = 16  # in bytes
@@ -45,48 +47,6 @@ def bytes_from_hex(hex_input: str) -> bytes:
 
 def normalize_secret(secret: bytes):
   return bytes(max(0, SECRET_LEN - len(secret))) + secret[:SECRET_LEN]
-
-
-def get_key():
-  return functools.reduce(lambda prev, curr: prev + curr,
-                          (random.getrandbits(8).to_bytes(
-                              length=1, byteorder='big')
-                           for _ in range(SECRET_LEN)), b'')
-
-
-def encrypt(data: bytes, secret: bytes, password: bytes, mode: Text) -> bytes:
-  assert len(secret) == SECRET_LEN
-  command = ' '.join(f"""
-    openssl
-    enc 
-    -e
-    -{mode}
-    -e
-    -K {hex_from_bytes(secret)}
-    -k {hex_from_bytes(password)}
-    -salt
-  """.split())
-  process = subprocess.run(['bash', '-c', command],
-                           input=data,
-                           stdout=subprocess.PIPE)
-  return process.stdout
-
-
-def decrypt(data: bytes, secret: bytes, password: bytes, mode: Text):
-  assert len(secret) == SECRET_LEN
-  command = ' '.join(f"""
-    openssl 
-    enc
-    -d
-    -{mode}
-    -K {hex_from_bytes(secret)}
-    -k {hex_from_bytes(password)}
-    -salt
-  """.split())
-  process = subprocess.run(['bash', '-c', command],
-                           input=data,
-                           stdout=subprocess.PIPE)
-  return process.stdout
 
 
 def parse_arguments():
@@ -138,11 +98,10 @@ def get_mode(parsed_args) -> str:
 def get_operation(parsed_args) -> str:
   operation = parsed_args.operation
   if operation == OPERATION_DEC:
-    return decrypt
+    return crypto_libs.decrypt
   elif operation == OPERATION_ENC:
-    return encrypt
-  else:
-    raise AttributeError(f'Unknown operation {operation}')
+    return crypto_libs.encrypt
+  raise AttributeError(f'Unknown operation {operation}')
 
 
 def get_output(parsed_args):
@@ -159,23 +118,31 @@ def get_config(parsed_args):
   return normalize_secret(secret), password.encode('utf-8')
 
 
-def main():
-  parsed_args = parse_arguments()
-
+def get_secret_and_password(parsed_args):
   if parsed_args.config_path:
     secret, password = get_config(parsed_args)
   else:
     secret = get_secret(parsed_args)
     password = get_password(parsed_args)
+  return secret, password
+
+
+def write_output(result, output_target):
+  if output_target == OUTPUT_STDOUT:
+    os.write(sys.stdout.fileno(), result)
+  else:
+    pathlib.Path(output_target).write_bytes(result)
+
+
+def main():
+  parsed_args = parse_arguments()
+  secret, password = get_secret_and_password(parsed_args)
   data = get_data(parsed_args)
   mode = get_mode(parsed_args)
   operation = get_operation(parsed_args)
   result = operation(data, secret, password, mode)
   output_target = get_output(parsed_args)
-  if output_target == OUTPUT_STDOUT:
-    os.write(1, result)
-  else:
-    pathlib.Path(output_target).write_bytes(result)
+  write_output(result, output_target)
 
 
 if __name__ == "__main__":
