@@ -2,7 +2,7 @@ MAIN=main.cpp
 OUTPUT=main.o
 STORE_PASS=testpass
 KEY_PASS=testpass
-KEY_STORE_NAME=teststore.pkcs12
+KEY_STORE_NAME=teststore.p12
 
 all: build run
 
