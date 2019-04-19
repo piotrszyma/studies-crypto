@@ -1,4 +1,5 @@
 import argparse
+import configparser
 import pathlib
 import subprocess
 import random
@@ -106,6 +107,7 @@ def parse_arguments():
       '-o',
       help="Where to store output data.",
       default=OUTPUT_STDOUT)
+  parser.add_argument('--config_path', '-c', help='Path to config file.')
   return parser.parse_args()
 
 
@@ -149,10 +151,22 @@ def get_output(parsed_args):
   return OUTPUT_STDOUT
 
 
+def get_config(parsed_args):
+  config = configparser.ConfigParser()
+  config.read(parsed_args.config_path)
+  secret = bytes_from_hex(config['credentials']['secret'])
+  password = config['credentials']['password']
+  return normalize_secret(secret), password.encode('utf-8')
+
+
 def main():
   parsed_args = parse_arguments()
-  secret = get_secret(parsed_args)
-  password = get_password(parsed_args)
+
+  if parsed_args.config_path:
+    secret, password = get_config(parsed_args)
+  else:
+    secret = get_secret(parsed_args)
+    password = get_password(parsed_args)
   data = get_data(parsed_args)
   mode = get_mode(parsed_args)
   operation = get_operation(parsed_args)
