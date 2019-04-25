@@ -2,6 +2,7 @@ import argparse
 import configparser
 import pathlib
 import subprocess
+import hashlib
 import random
 import logging
 import functools
@@ -10,10 +11,11 @@ import os
 
 from typing import Text
 
-import crypto_libs
-import utils
+from libs import crypto_libs
+from libs import keystore_libs
+from libs import utils
 
-MODES_CHOICES = ('aes-128-cbc', )
+MODES_CHOICES = ('aes-128-cbc', 'aes-128-ecb', 'aes-128-ofb')
 OPERATION_ENC = 'enc'
 OPERATION_DEC = 'dec'
 OPERATION_CHOICES = (OPERATION_DEC, OPERATION_ENC)
@@ -51,9 +53,9 @@ def get_data(parsed_args) -> bytes:
 
 def get_secret(parsed_args) -> bytes:
   if parsed_args.secret:
-    return utils.normalize_secret(utils.bytes_from_hex(parsed_args.secret))
+    return utils.bytes_from_hex(parsed_args.secret)
   print("Type secret (in hex format) to use and press ENTER.")
-  return utils.normalize_secret(utils.bytes_from_hex(input()))
+  return utils.bytes_from_hex(input())
 
 
 def get_password(parsed_args) -> bytes:
@@ -85,9 +87,16 @@ def get_output(parsed_args):
 def get_config(parsed_args):
   config = configparser.ConfigParser()
   config.read(parsed_args.config_path)
-  secret = utils.bytes_from_hex(config['credentials']['secret'])
-  password = config['credentials']['password']
-  return utils.normalize_secret(secret), password.encode('utf-8')
+  credentials_config = config['credentials']
+
+  keystore_path = credentials_config.get('keystore')
+  password = credentials_config['password']
+  if keystore_path:
+    privkey = keystore_libs.load_key_from_keystore(keystore_path, password)
+    secret = hashlib.sha512(privkey).digest()
+  else:
+    secret = utils.bytes_from_hex(credentials_config['secret'])
+  return secret, password.encode('utf-8')
 
 
 def get_secret_and_password(parsed_args):
