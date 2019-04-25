@@ -61,6 +61,7 @@ def xor_bytes(left, right):
 class CryptoLibsTests(unittest.TestCase):
 
   def setUp(self):
+    super().setUp()
     self.message = b'test data'
     self.password = b'test password'
     self.secret = b'test secret'
@@ -77,22 +78,35 @@ class CryptoLibsTests(unittest.TestCase):
     decrypted_data = self.decrypt_in_mode(encrypted_data, tested_mode)
     self.assertEqual(self.message, decrypted_data)
 
-  def test_aes_cbc_encrypt_crack(self):
+  def test_aes_cbc_not_cpa_secure(self):
     mode = 'aes-128-cbc'
-    iv_0 = random_bytes(16)
+
+    # Generate secret key
     key = random_bytes(16)
+
+    # Generate IV0 & MSG0 for query phase
+    iv_0 = random_bytes(16)
     msg_0 = random_bytes(16)
 
+    # Ask for cypher0 for MSG0 with IV0
     cypher_0 = crypto_libs.encrypt_nopad(msg_0, key, iv_0, mode)
 
+    # Generate MSG1 = MSG0 XOR IV0 XOR (IV0 + 1)
     iv_1 = increment_bytes(iv_0)
-    will_use_random = random.choices((True, False))
-    if will_use_random:
+
+    # Encryption oracle chooses
+    use_random_msg = random.getrandbits(1)
+
+    if use_random_msg:
+      print('Oracle decision: use random message.')
       msg_1 = random_bytes(16)
     else:
+      print('Oracle decision: use adversary message.')
       msg_1 = xor_bytes(xor_bytes(msg_0, iv_0), iv_1)
 
     cypher_1 = crypto_libs.encrypt_nopad(msg_1, key, iv_1, mode)
 
-    if cypher_0 == cypher_1 and will_use_random:
-      self.fail('Same cyphers different output!')
+    if cypher_0 == cypher_1:
+      print('Adversary output: It is cypher of his message.')
+    else:
+      print('Adversary output: It is cypher of random message.')

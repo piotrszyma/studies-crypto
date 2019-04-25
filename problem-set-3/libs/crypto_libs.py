@@ -41,7 +41,7 @@ def decrypt(data: bytes, secret: bytes, password: bytes, mode: Text):
   return process.stdout
 
 def encrypt_many(data: List[bytes], secret: bytes, password: bytes, mode: Text) -> List[bytes]:
-  return [encrypt(chunk) for chunk in data]
+  return [encrypt(chunk, secret, password, mode) for chunk in data]
 
 def encrypt_challenge(messages: List[bytes], secret: bytes, password: bytes, mode: Text):
   return random.choice(messages)
