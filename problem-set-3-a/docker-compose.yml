@@ -1,0 +1,37 @@
+version: '3'
+
+services:
+  # db:
+  #   image: postgres
+  #   restart: always
+  #   environment:
+  #     POSTGRES_USER: postgres
+  #     POSTGRES_PASSWORD: postgres
+  #   volumes:
+  #        - .pgdata:/var/lib/postgresql/data
+  backend:
+    build: ./backend/
+    volumes:
+      - ./backend/src/:/usr/src/app
+    # depends_on:
+    #   - db
+    ports:
+      - "8000:8000"
+  # frontend:
+  #   build: ./frontend/
+  #   volumes:
+  #     - ./frontend/build/:/usr/src/app/build/
+  #     - ./frontend/src/:/usr/src/app/src/
+  #     - ./frontend/config/:/usr/src/app/config/
+  #     - ./frontend/static/:/usr/src/app/static/
+  #     - ./frontend/test/:/usr/src/app/test/
+  #     - ./frontend/.babelrc:/usr/src/app/.babelrc
+  #     - ./frontend/.editorconfig:/usr/src/app/.editorconfig
+  #     - ./frontend/.eslintignore:/usr/src/app/.eslintignore
+  #     - ./frontend/.eslintrc.js:/usr/src/app/.eslintrc.js
+  #     - ./frontend/.postcssrc.js:/usr/src/app/.postcssrc.js
+  #     - ./frontend/package.json:/usr/src/app/package.json
+  #     - ./frontend/yarn.lock:/usr/src/app/yarn.lock
+  #     - ./frontend/index.html:/usr/src/app/index.html
+  #   ports:
+  #     - "8080:8080"
