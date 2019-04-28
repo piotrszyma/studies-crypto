@@ -8,9 +8,16 @@
   Hi {{ user.username }}!
   <p><a href="{% url 'logout' %}">logout</a></p>
   <p><a href="{% url 'password_reset' %}">reset password</a></p>
-  <p><a href="{% url 'add_key' %}">add yubikey</a></p>
+  {% if user.u2f_key %}
+    <p><a href="{% url 'add_key' %}">add yubikey</a></p>
+  {% else %}
+    <p><a href="{% url 'add_key' %}">overwrite yubikey</a></p>
+  {% endif %}
 {% else %}
   <p>You are not logged in</p>
   <a href="{% url 'login' %}">login</a>
 {% endif %}
+{% endblock %}
+
+{% block back %}
 {% endblock %}

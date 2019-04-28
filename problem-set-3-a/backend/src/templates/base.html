@@ -16,6 +16,9 @@
     {% endif %}
     {% block content %}
     {% endblock %}
+    {% block back %}
+      <a href="{% url 'home' %}">get back home</a>
+    {% endblock %}
   </main>
 </body>
 </html>

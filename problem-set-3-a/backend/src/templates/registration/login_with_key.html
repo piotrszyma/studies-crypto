@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<p>Click on yubikey to authenticate.</p>
+
+<form id="u2f-form" method="POST">
+  {% csrf_token %}
+  <input name="response" type="hidden"/>
+</form>
+
+<script type="application/json" id="django_u2f_request">
+  {{ u2f_request|safe }}
+</script>
+<script src="{% static 'js/u2f-api.js' %}"></script>
+<script>
+var requestElem = document.getElementById('django_u2f_request');
+if (requestElem) {
+  request = JSON.parse(requestElem.textContent);
+  u2f.sign(request.appId, request.challenge, request.registeredKeys, function(resp) {
+    var form = document.getElementById('u2f-form');
+    form.response.value = JSON.stringify(resp);
+    form.submit();
+  });
+}
+
+</script>
+{% endblock %}
+
+{% block back %}
+{% endblock %}

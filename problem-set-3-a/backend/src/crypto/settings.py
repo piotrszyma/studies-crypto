@@ -47,6 +47,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'accounts.middleware.yubikey_middleware',
 ]
 
 ROOT_URLCONF = 'crypto.urls'
@@ -105,24 +106,9 @@ STATICFILES_DIRS = (
   os.path.join(BASE_DIR, 'static/'),
 )
 
-LOGIN_REDIRECT_URL = 'home'
+
+LOGIN_REDIRECT_URL = 'authenticate_with_yubikey'
 LOGOUT_REDIRECT_URL = 'home'
 
 EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
 EMAIL_FILE_PATH = os.path.join(BASE_DIR, "sent_emails")
-
-# Use the built-in chrome support
-# Quit all instances of Google Chrome.
-
-# Restart Google Chrome with the --show-component-extension-options command-line flag.
-
-# Navigate to chrome://extensions and enable Developer Mode by clicking a checkbox in the top right corner.
-
-# Find the CryptoTokenExtension extension.
-
-# Click on "background page". This will open a Developer Tools window, including a Console.
-
-# In the console, type:
-
-#   HTTP_ORIGINS_ALLOWED = true;
-# Then, point your browser at http://localhost:8888/

@@ -7,9 +7,11 @@ from django.views import generic
 from django.views.generic import FormView
 from django.shortcuts import render
 from django.shortcuts import redirect
+from django.utils import timezone
 
 from u2flib_server import u2f
 from . import models
+
 
 
 class RegisterView(generic.CreateView):
@@ -29,7 +31,8 @@ def add_key(request):
     origin = get_origin(request)
     u2f_request = u2f.begin_registration(origin, [])
     request.session['u2f_request'] = u2f_request
-    return render(request, 'fido/add_key.html', {'u2f_request': json.dumps(request.session['u2f_request'])})
+    context = {'u2f_request': json.dumps(request.session['u2f_request'])}
+    return render(request, 'registration/add_key.html', context)
   u2f_response = request.POST['response']
   origin = get_origin(request)
   device, attestation_cert = u2f.complete_registration(
@@ -43,4 +46,28 @@ def add_key(request):
       },
   )
   messages.success(request, 'Yubikey configured.')
+  del request.session['u2f_request']
+  return redirect('home')
+
+def authenticate_with_yubikey(request):
+  if request.method == 'GET':
+    origin = get_origin(request)
+    u2f_key = models.U2FKey.objects.get(user=request.user)
+    u2f_request = u2f.begin_authentication(u2f_key.app_id, [{
+      'publicKey': u2f_key.public_key,
+      'keyHandle': u2f_key.key_handle,
+      'appId': u2f_key.app_id,
+      'version': 'U2F_V2'}])
+    request.session['u2f_request'] = u2f_request
+    context = { 'u2f_request': json.dumps(u2f_request) }
+    return render(request, 'registration/login_with_key.html', context)
+  u2f_response = request.POST['response']
+  device, login_counter, _ = u2f.complete_authentication(
+    request.session['u2f_request'], u2f_response)
+  u2f_key = models.U2FKey.objects.get(key_handle=device['keyHandle'])
+  u2f_key.last_used_at = timezone.now()
+  u2f_key.save()
+  messages.success(request, 'authenticated with yubikey')
+  request.session['yubikey_authenticated'] = True
+  del request.session['u2f_request']
   return redirect('home')
