@@ -1,0 +1,14 @@
+<!-- templates/registration/login.html -->
+{% extends 'base.html' %}
+
+{% block title %} Login {% endblock %}
+
+{% block content %}
+<h2>Login</h2>
+Type username, password and press yubikey to login.
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <input name="response" type="hidden"/>
+</form>
+{% endblock %}
