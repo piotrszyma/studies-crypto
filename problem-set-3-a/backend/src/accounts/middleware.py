@@ -1,10 +1,15 @@
 from django.urls import resolve
 from django.shortcuts import redirect
 
+from accounts import models
+
 def yubikey_middleware(get_response):
 
     def middleware(request):
         if not request.user.is_authenticated:
+          return get_response(request)
+
+        if not models.U2FKey.objects.filter(user=request.user).exists():
           return get_response(request)
 
         yubikey_authenticated = request.session.get('yubikey_authenticated')

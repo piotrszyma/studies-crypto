@@ -5,18 +5,40 @@
 
 {% block content %}
 {% if user.is_authenticated %}
-  Hi {{ user.username }}!
-  <p><a href="{% url 'logout' %}">logout</a></p>
-  <p><a href="{% url 'password_reset' %}">reset password</a></p>
+<ul class="nav justify-content-center">
+  <li class="nav-item">
+    {% if user.u2f_key %}
+      <a class="nav-link" href="{% url 'add_key' %}">Overwrite yubikey</a>
+    {% else %}
+      <a class="nav-link" href="{% url 'add_key' %}">Add yubikey</a>
+    {% endif %}
+  </li>
   {% if user.u2f_key %}
-    <p><a href="{% url 'add_key' %}">add yubikey</a></p>
-  {% else %}
-    <p><a href="{% url 'add_key' %}">overwrite yubikey</a></p>
+  <li class="nav-item">
+    <a class="nav-link" href="{% url 'delete_key' %}">Delete yubikey</a>
+  </li>
   {% endif %}
+  <li class="nav-item">
+    <a class="nav-link" href="{% url 'password_reset' %}">Reset password</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="{% url 'logout' %}">Logout</a>
+  </li>
+</ul>
 {% else %}
   <p>You are not logged in</p>
   <a href="{% url 'login' %}">login</a>
+  <a href="{% url 'register' %}">register</a>
 {% endif %}
+
+{% if user.is_authenticated %}
+<div class="row">
+  <div class="row-8">
+    <h3>Hi {{ user.username }}! How are you today?</h3>
+  </div>
+</div>
+{% endif %}
+
 {% endblock %}
 
 {% block back %}

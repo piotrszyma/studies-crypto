@@ -1,14 +1,15 @@
-# import json
+from django import forms
+from django.contrib.auth.models import User
+from django.contrib.auth.forms import UserCreationForm, UsernameField
+from django.utils.translation import gettext_lazy as _
 
-# from django import forms
 
-# from u2flib_server import u2f
+class RegisterForm(UserCreationForm):
+  email = forms.EmailField(
+        label=_("Email"),
+    )
 
-# class KeyRegistrationForm(forms.Form):
-#     response = forms.CharField()
-
-#     def __init__(self, *args, **kwargs):
-#         self.user = kwargs.pop('user')
-#         self.request = kwargs.pop('request')
-#         self.appId = kwargs.pop('appId')
-#         return super(SecondFactorForm, self).__init__(*args, **kwargs)
+  class Meta:
+    model = User
+    fields = ("username", "email")
+    field_classes = {'username': UsernameField}

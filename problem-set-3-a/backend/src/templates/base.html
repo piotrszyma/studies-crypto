@@ -2,23 +2,40 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8">
+ <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
   <title>{% block title %}Crypto Page{% endblock %}</title>
 </head>
 <body>
-  <main>
-    {% if messages %}
-    <ul class="messages">
+    <div class="container">
+      {% if messages %}
+      <div class="row justify-content-center">
         {% for message in messages %}
-        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+        <div class="col-12">
+          <div class="alert alert-{{ message.tags }}" role="alert">
+            {{ message }}
+          </div>
+          </div>
         {% endfor %}
-    </ul>
-    {% endif %}
-    {% block content %}
-    {% endblock %}
-    {% block back %}
-      <a href="{% url 'home' %}">get back home</a>
-    {% endblock %}
+      </div>
+      {% endif %}
+      <div class="row justify-content-center" style="margin-top: 1rem;">
+        <div class="col-12">
+          {% block content %}
+          {% endblock %}
+        </div>
+      </div>
+      <div class="row justify-content-center" style="margin-top: 1rem;">
+        <div class="col-12">
+          {% block back %}
+          <a href="{% url 'home' %}">
+            <button type="button" class="btn btn-primary btn-sm">Back</button>
+          </a>
+          {% endblock %}
+        </div>
+      </div>
+    </div>
   </main>
 </body>
 </html>

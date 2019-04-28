@@ -11,11 +11,12 @@ from django.utils import timezone
 
 from u2flib_server import u2f
 from . import models
+from . import forms
 
 
 
 class RegisterView(generic.CreateView):
-  form_class = UserCreationForm
+  form_class = forms.RegisterForm
   success_url = reverse_lazy('login')
   template_name = 'registration/register.html'
 
@@ -25,6 +26,13 @@ def get_origin(request):
         scheme=request.scheme,
         host=request.get_host(),
     )
+
+
+def delete_key(request):
+  models.U2FKey.objects.filter(user=request.user).delete()
+  messages.info(request, 'Yubikey deleted')
+  return redirect('home')
+
 
 def add_key(request):
   if request.method == 'GET':
@@ -47,12 +55,20 @@ def add_key(request):
   )
   messages.success(request, 'Yubikey configured.')
   del request.session['u2f_request']
+  # For first usage, assume authenticated.
+  request.session['yubikey_authenticated'] = True
   return redirect('home')
 
 def authenticate_with_yubikey(request):
+  u2f_key = models.U2FKey.objects.filter(user=request.user).first()
+
+  if not u2f_key:
+    messages.error(request, 'Cannot authenticate with yubikey. '
+                            'You need to set it first.')
+    return redirect('home')
+
   if request.method == 'GET':
     origin = get_origin(request)
-    u2f_key = models.U2FKey.objects.get(user=request.user)
     u2f_request = u2f.begin_authentication(u2f_key.app_id, [{
       'publicKey': u2f_key.public_key,
       'keyHandle': u2f_key.key_handle,
@@ -64,7 +80,6 @@ def authenticate_with_yubikey(request):
   u2f_response = request.POST['response']
   device, login_counter, _ = u2f.complete_authentication(
     request.session['u2f_request'], u2f_response)
-  u2f_key = models.U2FKey.objects.get(key_handle=device['keyHandle'])
   u2f_key.last_used_at = timezone.now()
   u2f_key.save()
   messages.success(request, 'authenticated with yubikey')

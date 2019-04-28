@@ -3,9 +3,9 @@
 
 {% block content %}
   {% if user.u2f_key %}
-    <p>To add a security key to your account, insert (and tap) it.</p>
-  {% else %}
     <p>You have U2F key set, to overwrite, insert (and tap) it.</p>
+  {% else %}
+    <p>To add a security key to your account, insert (and tap) it.</p>
   {% endif %}
 <form id="u2f-form" method="POST">
   {% csrf_token %}
