@@ -21,9 +21,8 @@ def save_to_keystore(dumped_key, keystore_path, secret_password):
 
 def load_key_from_keystore(keystore_path, secret_password):
   keystore = jks.KeyStore.load(keystore_path, secret_password)
-  key_bytes =  keystore.private_keys[PRIVKEY_NAME].pkey
+  key_bytes = keystore.private_keys[PRIVKEY_NAME].pkey
   return key_bytes
-
 
 if __name__ == "__main__":
   config = configparser.ConfigParser()

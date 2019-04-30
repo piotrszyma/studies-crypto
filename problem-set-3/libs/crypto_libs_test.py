@@ -1,5 +1,5 @@
-import unittest
 import random
+import unittest
 
 import parameterized
 
@@ -33,29 +33,40 @@ ALL_MODES = [
 ]
 
 UNSUPPORTED_MODS = [
-  'des-ede3-cfb1',
-  'aes-128-xts',
-  'aes-256-xts',
-  'id-aes128-GCM',
-  'id-aes192-GCM',
-  'id-aes256-GCM',
-  'aes-128-gcm',
-  'aes-192-gcm',
-  'aes-256-gcm',
+    'des-ede3-cfb1',
+    'aes-128-xts',
+    'aes-256-xts',
+    'id-aes128-GCM',
+    'id-aes192-GCM',
+    'id-aes256-GCM',
+    'aes-128-gcm',
+    'aes-192-gcm',
+    'aes-256-gcm',
 ]
 
 TESTED_MODES = set(ALL_MODES) - set(UNSUPPORTED_MODS)
 
-def random_bytes(bytes_size):
-  return bytes(random.getrandbits(8) for _ in range(bytes_size))
 
-def increment_bytes(bytes_number):
-  length = len(bytes_number)
-  incremented_int = int.from_bytes(bytes_number, byteorder='big') + 1
-  return incremented_int.to_bytes(length, byteorder='big')
+class Oracle:
 
-def xor_bytes(left, right):
-  return bytes(left_byte ^ right_byte for left_byte, right_byte in zip(left, right))
+  def __init__(self):
+    self.key = utils.random_bytes(16)
+    self.iv = utils.random_bytes(16)
+    self.mode = 'aes-128-cbc'
+
+  def get_cypher(self, msg):
+    cypher = crypto_libs.encrypt(msg, self.key, self.mode, iv=self.iv)
+    self.iv = utils.increment_bytes(self.iv)
+    return cypher
+
+  def challenge(self, msg):
+    use_random_msg = random.getrandbits(1)
+    if use_random_msg:
+      print('oracle used random msg')
+      msg = utils.random_bytes(16)
+    else:
+      print('oracle used adversary')
+    return self.get_cypher(msg)
 
 
 class CryptoLibsTests(unittest.TestCase):
@@ -63,14 +74,13 @@ class CryptoLibsTests(unittest.TestCase):
   def setUp(self):
     super().setUp()
     self.message = b'test data'
-    self.password = b'test password'
     self.secret = b'test secret'
 
   def encrypt_in_mode(self, mode):
-    return crypto_libs.encrypt(self.message, self.secret, self.password, mode)
+    return crypto_libs.encrypt(self.message, self.secret, mode)
 
   def decrypt_in_mode(self, encryption, mode):
-    return crypto_libs.decrypt(encryption, self.secret, self.password, mode)
+    return crypto_libs.decrypt(encryption, self.secret,  mode)
 
   @parameterized.parameterized.expand(TESTED_MODES)
   def test_encryption_modes(self, tested_mode):
@@ -78,35 +88,21 @@ class CryptoLibsTests(unittest.TestCase):
     decrypted_data = self.decrypt_in_mode(encrypted_data, tested_mode)
     self.assertEqual(self.message, decrypted_data)
 
-  def test_aes_cbc_not_cpa_secure(self):
-    mode = 'aes-128-cbc'
+  def test_cpa_insecure(self):
+    oracle = Oracle()
 
-    # Generate secret key
-    key = random_bytes(16)
+    msg0 = utils.random_bytes(16)
+    c0 = oracle.get_cypher(msg0)
 
-    # Generate IV0 & MSG0 for query phase
-    iv_0 = random_bytes(16)
-    msg_0 = random_bytes(16)
+    iv0 = c0[-16:]
+    calculated_iv1 = utils.increment_bytes(iv0)
 
-    # Ask for cypher0 for MSG0 with IV0
-    cypher_0 = crypto_libs.encrypt_nopad(msg_0, key, iv_0, mode)
+    msg1 = utils.xor_bytes(utils.xor_bytes(msg0, iv0), calculated_iv1)
 
-    # Generate MSG1 = MSG0 XOR IV0 XOR (IV0 + 1)
-    iv_1 = increment_bytes(iv_0)
+    c0_without_iv = c0[:-16]
+    received_msg1 = oracle.challenge(msg1)[:-16]
 
-    # Encryption oracle chooses
-    use_random_msg = random.getrandbits(1)
-
-    if use_random_msg:
-      print('Oracle decision: use random message.')
-      msg_1 = random_bytes(16)
+    if c0_without_iv == received_msg1:
+      print('Adversary: used my message')
     else:
-      print('Oracle decision: use adversary message.')
-      msg_1 = xor_bytes(xor_bytes(msg_0, iv_0), iv_1)
-
-    cypher_1 = crypto_libs.encrypt_nopad(msg_1, key, iv_1, mode)
-
-    if cypher_0 == cypher_1:
-      print('Adversary output: It is cypher of his message.')
-    else:
-      print('Adversary output: It is cypher of random message.')
+      print('Adversary: Used random message')

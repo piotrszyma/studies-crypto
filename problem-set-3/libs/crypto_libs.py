@@ -1,63 +1,48 @@
 import subprocess
 import random
+import pathlib
 
 from typing import Text, List
 
 from config import settings
 from libs import utils
 
+SIZE_OF_IV = 16
 
-def encrypt(data: bytes, secret: bytes, password: bytes, mode: Text) -> bytes:
+def get_random_iv():
+  return bytes(random.randrange(0, 255) for _ in range(SIZE_OF_IV))
+
+def encrypt(data: bytes, secret: bytes, mode: Text, iv: bytes = None) -> bytes:
+  iv = iv or get_random_iv()
   command = ' '.join(f"""
     openssl
     enc
     -e
     -{mode}
-    -e
     -K {utils.hex_from_bytes(secret)}
-    -k {utils.hex_from_bytes(password)}
+    -iv {utils.hex_from_bytes(iv)}
   """.split())
   process = subprocess.run(['bash', '-c', command],
                            input=data,
                            stdout=subprocess.PIPE)
-  return process.stdout
+  return process.stdout + iv
 
 
-def decrypt(data: bytes, secret: bytes, password: bytes, mode: Text):
+def decrypt(data: bytes, secret: bytes, mode: Text):
+  iv = data[-SIZE_OF_IV:]
+  data = data[:-SIZE_OF_IV]
   command = ' '.join(f"""
     openssl
     enc
     -d
     -{mode}
     -K {utils.hex_from_bytes(secret)}
-    -k {utils.hex_from_bytes(password)}
+    -iv {utils.hex_from_bytes(iv)}
   """.split())
   process = subprocess.run(['bash', '-c', command],
                            input=data,
                            stdout=subprocess.PIPE,
                            stderr=subprocess.PIPE)
   if process.stderr:
-    raise RuntimeError(f'Mode {mode} returned error {process.stderr}')
-  return process.stdout
-
-def encrypt_many(data: List[bytes], secret: bytes, password: bytes, mode: Text) -> List[bytes]:
-  return [encrypt(chunk, secret, password, mode) for chunk in data]
-
-def encrypt_challenge(messages: List[bytes], secret: bytes, password: bytes, mode: Text):
-  return random.choice(messages)
-
-def encrypt_nopad(data: bytes, secret: bytes, iv: bytes, mode: Text):
-  command = ' '.join(f"""
-    openssl
-    enc
-    -e
-    -{mode}
-    -e
-    -K {utils.hex_from_bytes(secret)}
-    -iv {utils.hex_from_bytes(iv)}
-    -nopad
-  """.split())
-  process = subprocess.run(['bash', '-c', command],
-                           input=data,
-                           stdout=subprocess.PIPE)
+    raise RuntimeError(f'Mode {mode} returned error: "{process.stderr}"')
   return process.stdout

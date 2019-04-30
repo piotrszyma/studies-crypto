@@ -15,3 +15,30 @@ key_gen:
 		-keysize 128 \
 		-storetype jks \
 		-keystore $(KEY_STORE_NAME)
+
+perform_challenge:
+	python main.py \
+	enc \
+	--config_path config/config.ini \
+	--input_folder=messages \
+	--challenge
+
+create_test_data:
+	mkdir messages
+	echo "message1" > messages/m1
+	echo "message2" > messages/m2
+	echo "message3" > messages/m3
+
+encrypt_test_data:
+	python main.py \
+	enc \
+	--config_path config/config.ini \
+	--input_folder=messages \
+	--output_folder=cyphers
+
+decrypt_test_data:
+	python main.py \
+	dec \
+	--config_path config/config.ini \
+	--input_folder=cyphers \
+	--output_folder=decrypted
