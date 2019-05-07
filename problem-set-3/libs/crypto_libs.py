@@ -1,6 +1,7 @@
 import subprocess
 import random
 import pathlib
+import os
 
 from typing import Text, List
 
@@ -44,5 +45,7 @@ def decrypt(data: bytes, secret: bytes, mode: Text):
                            stdout=subprocess.PIPE,
                            stderr=subprocess.PIPE)
   if process.stderr:
-    raise RuntimeError(f'Mode {mode} returned error: "{process.stderr}"')
+    return os.urandom(16)
+    # import pdb; pdb.set_trace()
+    # raise RuntimeError(f'Mode {mode} returned error: "{process.stderr}"')
   return process.stdout
