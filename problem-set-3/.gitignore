@@ -2,3 +2,7 @@
 *.p12
 *.pkcs12
 .mypy_cache/
+cyphers
+decrypted
+msg
+messages/
