@@ -3,19 +3,20 @@ import os
 import random
 import functools
 import collections
+import argparse
 
 sys.path.append(os.path.abspath('../problem-set-3'))
 
 from typing import List
 
-from crypto_libs import encrypt, decrypt
+from libs.crypto_libs import encrypt, decrypt
 
 encrypt = functools.partial(encrypt, mode='aes-128-cbc')
 decrypt = functools.partial(decrypt, mode='aes-128-cbc')
 
 C_PARAM = 10
 KEY_SIZE = 16
-N = 10 # number of puzzles
+N = 2 ** 24 # number of puzzles
 KNOWN_PART = os.urandom(15)
 
 KEY_ID_LEN = 48 # Confirms good key_id len
@@ -36,7 +37,7 @@ def generate_single_puzzle(puzzle_id, k1, k2, constant):
   enc_key = get_full_key(KNOWN_PART)
   # CONST ; KEY; ID
   msg = key_id + key + constant
-  print(len(key_id))
+  # print(len(key_id))
   encryption = encrypt(msg, enc_key)
   return key_id, KeyEncryption(key, encryption)
 
@@ -92,6 +93,7 @@ def choose_decrypt_and_return_id(puzzles, constant):
 def main():
   # Sender.
   id_to_key_enc, constant = generate_puzzles()
+  print('Puzzle generated.')
   puzzles = [key_enc.encryption
              for key_enc in id_to_key_enc.values()]
 
