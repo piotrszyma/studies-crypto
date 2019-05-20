@@ -6,7 +6,8 @@
 
 #define kPameterD -11
 
-// x2+y2=1+dx2y2.
+// Edward curve def
+// x_2 + y_2 = 1 + d * x_2 * y_2.
 
 int power(int base, const unsigned int exponent, const int modulus) {
   while (base < 0) 
@@ -18,22 +19,26 @@ int power(int base, const unsigned int exponent, const int modulus) {
   return result;
 }
 
-int positive_modulo(int value, int modulus) {
+int positiveModulo(int value, int modulus) {
   return (value % modulus + modulus) % modulus;
 }
-
 
 class F {
   private:
     int value;
     int modulus;
   public:
-    F(int value_, int modulus_) : value(positive_modulo(value_, modulus_)), modulus(modulus_) {};
+    F(int value_, int modulus_) : value(positiveModulo(value_, modulus_)), modulus(modulus_) {};
     int getValue() {
       return value;
     }
     int getModulus() {
       return modulus;
+    }
+
+    // Generates new F same modulus with new value.
+    F getFromModulus(int value_) {
+      return F(value_, modulus);
     }
 
     F getOne() {
@@ -90,7 +95,21 @@ auto edwardsAdd(std::pair<F, F> left, std::pair<F, F> right) {
   return std::pair<F, F>(x3, y3);
 }
 
-auto modulus_factory(int modulus) {
+auto scalarMultiply(int n, F_PAIR vector) {
+  assert(n >= 0);
+  // caveat: caller must ensure that n is nonnegative
+  if (n == 0) {
+    return F_PAIR(vector.first.getFromModulus(0), vector.first.getFromModulus(1));
+  } else if (n == 1) {
+    return vector;
+  } 
+  auto multiplied = scalarMultiply(n / 2, vector);
+  multiplied = edwardsAdd(multiplied, multiplied);
+  if (n % 2) multiplied = edwardsAdd(vector, multiplied);
+  return multiplied;
+}
+
+auto modulusFactory(int modulus) {
   return [modulus](int number) {
     return F(number, modulus); 
   };
@@ -98,7 +117,7 @@ auto modulus_factory(int modulus) {
 
 
 int main(void) {
-  auto F_1009 = modulus_factory(1009);
+  auto F_1009 = modulusFactory(1009);
   assert(F_1009(-1) == F_1009(1008));
   assert(F_1009(6) != F_1009(5));
   assert(F_1009(101) + F_1009(1000) == F_1009(92));
@@ -114,5 +133,8 @@ int main(void) {
   assert(result.first.getValue() == 944);
   assert(result.second.getValue() == 175);
 
+  F_PAIR multResult = scalarMultiply(5, result);
+  assert(multResult.first.getValue() == 900);
+  assert(multResult.second.getValue() == 799);
   return 0;
 };
