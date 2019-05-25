@@ -96,8 +96,7 @@ auto edwardsAdd(std::pair<F, F> left, std::pair<F, F> right) {
 }
 
 auto scalarMultiply(int n, F_PAIR vector) {
-  assert(n >= 0);
-  // caveat: caller must ensure that n is nonnegative
+  assert(n >= 0); 
   if (n == 0) {
     return F_PAIR(vector.first.getFromModulus(0), vector.first.getFromModulus(1));
   } else if (n == 1) {
@@ -124,7 +123,6 @@ int main(void) {
   assert(F_1009(101) - F_1009(1000) == F_1009(110));
   assert(F_1009(101) * F_1009(1000) == F_1009(100));
   assert(F_1009(101) / F_1009(1000) == F_1009(213));
-  
   
   F_PAIR P1 (F_1009(7), F_1009(415));
   F_PAIR P2 (F_1009(23), F_1009(487));
