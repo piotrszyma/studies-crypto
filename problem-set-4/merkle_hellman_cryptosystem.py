@@ -89,7 +89,6 @@ def main():
 
   priv_key, public_key = key_gen(msg_len=len(message_bits))
 
-  import pdb; pdb.set_trace()
   cypher = enc(message_bits, public_key)
   decryption_bits = dec(cypher, priv_key)
 

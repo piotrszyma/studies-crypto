@@ -4,6 +4,13 @@ import merkle_hellman_cryptosystem as mhc
 
 
 
+def get_int_prog_solutions(n, g, B):
+  """Generates integer program solutions for provided params.
+
+  """
+  pass
+
+
 def gen_superinc_seq(n, g, start=1, prev_sum=0): # TODO: start = 0 or 1 ?
   """Generates superincreasing sequences in increasing order.
 
