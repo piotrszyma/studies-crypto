@@ -1,8 +1,12 @@
 """Merkle Hellman knapsack cryptosystem."""
 
 import random
+import string
+
+import merkle_hellman_attack as mh_attack
 
 from utils import modinv, gcd
+
 
 MESSAGE_LEN = 200 # Bits
 
@@ -84,15 +88,24 @@ def bytes_to_bits_array(bytes_array):
 
 
 def main():
-  message_bytes = input().encode()
+  # message_bytes = ''.join(random.choices(string.ascii_uppercase, k=5)).encode()
+  message_bytes = 'lorem ipsum'.encode()
   message_bits = bytes_to_bits_array(message_bytes)
 
   priv_key, public_key = key_gen(msg_len=len(message_bits))
 
   cypher = enc(message_bits, public_key)
-  decryption_bits = dec(cypher, priv_key)
 
+  print('Possible solutions found by LLL:')
+
+  for result in mh_attack.mh_attack(public_key['a'], cypher):
+    print(result)
+    print(bits_array_to_bytes(result))
+
+  print('\n-----')
+  decryption_bits = dec(cypher, priv_key)
   decryption_bytes = bits_array_to_bytes(decryption_bits)
+  print(decryption_bits)
   print(decryption_bytes)
 
 if __name__ == "__main__":
