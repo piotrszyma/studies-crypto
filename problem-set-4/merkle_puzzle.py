@@ -18,14 +18,15 @@ from Crypto.Util import Padding
 
 C_PARAM = 1
 KEY_SIZE = 16
-N = 2 ** 24 # number of puzzles
+N = 2**16  # number of puzzles
 KNOWN_PART = os.urandom(15)
 
-KEY_ID_LEN = 48 # Confirms good key_id len
+KEY_ID_LEN = 48  # Confirms good key_id len
 
 
 def get_full_key(known_part):
   return known_part + os.urandom(16 - len(known_part))
+
 
 def encrypt(message, secret):
   iv = os.urandom(16)
@@ -34,13 +35,16 @@ def encrypt(message, secret):
   cypher = aes_obj.encrypt(padded_message)
   return cypher + iv
 
+
 def decrypt(message, secret):
   cypher, iv = message[:-16], message[-16:]
   aes_obj = AES.new(secret, AES.MODE_CBC, iv)
   message = aes_obj.decrypt(cypher)
   return Padding.unpad(message, 16)
 
+
 KeyEncryption = collections.namedtuple('KeyEncryption', 'key encryption')
+
 
 def generate_single_puzzle(puzzle_id, k1, k2, constant):
   puzzle_id_bytes = puzzle_id.to_bytes(16, byteorder='big')
@@ -71,9 +75,8 @@ def generate_puzzles() -> (List[bytes], bytes, bytes):
 
 
 def _get_possible_keys(size):
-  return (
-    num.to_bytes(length=size, byteorder='big')
-    for num in range(1, (2 ** 8) ** size))
+  return (num.to_bytes(length=size, byteorder='big')
+          for num in range(1, (2**8)**size))
 
 
 def choose_decrypt_and_return_id(puzzles, constant):
@@ -87,7 +90,8 @@ def choose_decrypt_and_return_id(puzzles, constant):
     except ValueError:
       pass
     else:
-      key_id_key, decrypted_constant = decrypted[:-len(constant)], decrypted[-len(constant):]
+      key_id_key, decrypted_constant = decrypted[:-len(constant)], decrypted[
+          -len(constant):]
 
       if constant == decrypted_constant:
         key_id = key_id_key[:KEY_ID_LEN]
@@ -102,8 +106,7 @@ def main():
   print(f'Size: {N}')
   start = time.time()
   id_to_key_enc, constant = generate_puzzles()
-  puzzles = [key_enc.encryption
-             for key_enc in id_to_key_enc.values()]
+  puzzles = [key_enc.encryption for key_enc in id_to_key_enc.values()]
   generated = time.time()
   print(f'Generated in {(generated - start):.2f}s')
   # Receiver.
@@ -115,6 +118,7 @@ def main():
   # Checks if receiver has good key.
   # (sender has same key under chosen_key_id)
   assert id_to_key_enc[chosen_key_id].key == chosen_key
+
 
 if __name__ == "__main__":
   main()

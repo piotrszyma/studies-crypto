@@ -1,5 +1,5 @@
 """Merkle Hellman knapsack cryptosystem."""
-
+import sys
 import random
 import string
 
@@ -7,16 +7,15 @@ import merkle_hellman_attack as mh_attack
 
 from utils import modinv, gcd
 
-
-MESSAGE_LEN = 200 # Bits
+MESSAGE_LEN = 200  # Bits
 
 
 def gen_priv_key(n):
   knapsack_vector = [
-      random.randint(
-          (2 ** (i - 1) - 1) * (2 ** n), (2 ** (i - 1) * (2 ** n)))
-      for i in range(1, n + 1)]
-  modulus = random.randint(2 ** (2 * n + 1) + 1, 2 ** (2 * n + 2) - 1)
+      random.randint((2**(i - 1) - 1) * (2**n), (2**(i - 1) * (2**n)))
+      for i in range(1, n + 1)
+  ]
+  modulus = random.randint(2**(2 * n + 1) + 1, 2**(2 * n + 2) - 1)
 
   while True:
     try:
@@ -35,18 +34,19 @@ def gen_priv_key(n):
       'len': n,
   }
 
+
 def calculate_pub_key(priv_key):
   a_prim = priv_key['a_prim']
   modulus = priv_key['modulus']
   w = priv_key['w']
-  return {
-      'a': [(a_prim_i * w) % modulus for a_prim_i in a_prim]
-  }
+  return {'a': [(a_prim_i * w) % modulus for a_prim_i in a_prim]}
+
 
 def key_gen(msg_len):
   priv_key = gen_priv_key(msg_len)
   public_key = calculate_pub_key(priv_key)
   return priv_key, public_key
+
 
 def enc(message, public_key):
   # Message to encode.
@@ -56,6 +56,7 @@ def enc(message, public_key):
   # Encoded to S using a (S is now a "trapdoor knapsack vector").
   S = sum(a_i * x_i for a_i, x_i in zip(a, x))
   return S
+
 
 def dec(S, priv_key):
   # Message sent to designer, who computes S'.
@@ -72,41 +73,57 @@ def dec(S, priv_key):
 
   # from last index - 1 to 0
   for idx in range(msg_len - 2, -1, -1):
-    val = S_prim - sum(decoded_x[j] * a_prim[j] for j in range(idx + 1, msg_len))
+    val = S_prim - sum(decoded_x[j] * a_prim[j]
+                       for j in range(idx + 1, msg_len))
     decoded_x[idx] = 1 if val >= a_prim[idx] else 0
 
   return decoded_x
 
+
 def bits_array_to_bytes(bits_array):
-  return (
-      int(''.join(map(str, bits_array)), base=2)
-      .to_bytes(length=len(bits_array) // 8 + 1, byteorder='big')
-  )
+  return (int(''.join(map(str, bits_array)), base=2).to_bytes(
+      length=len(bits_array) // 8 + 1, byteorder='big'))
+
 
 def bytes_to_bits_array(bytes_array):
   return list(map(int, bin(int(bytes_array.hex(), base=16))[2:]))
 
 
 def main():
-  # message_bytes = ''.join(random.choices(string.ascii_uppercase, k=5)).encode()
-  message_bytes = 'lorem ipsum'.encode()
+  attack = len(sys.argv) > 1
+  if attack:
+    if len(sys.argv) > 2:
+      message_bytes = sys.argv[2].encode()
+    else:
+      message_bytes = ''.join(random.choices(string.ascii_uppercase,
+                                             k=2)).encode()
+    print(f'Will encrypt some random string: {message_bytes}')
+  else:
+    print('Type in message to encrypt: ', end='')
+    message_bytes = input().encode()
+
   message_bits = bytes_to_bits_array(message_bytes)
 
   priv_key, public_key = key_gen(msg_len=len(message_bits))
 
   cypher = enc(message_bits, public_key)
 
-  print('Possible solutions found by LLL:')
+  if attack:
+    print('Possible solutions found by LLL:')
 
-  for result in mh_attack.mh_attack(public_key['a'], cypher):
-    print(result)
-    print(bits_array_to_bytes(result))
+    for result in mh_attack.mh_attack(public_key['a'], cypher):
+      print(result)
+      print(bits_array_to_bytes(result))
 
-  print('\n-----')
+    print('\n-----')
+
   decryption_bits = dec(cypher, priv_key)
   decryption_bytes = bits_array_to_bytes(decryption_bits)
-  print(decryption_bits)
+
+  if attack:
+    print(decryption_bits)
   print(decryption_bytes)
+
 
 if __name__ == "__main__":
   main()
