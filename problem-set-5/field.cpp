@@ -67,6 +67,10 @@ F F::operator + (F anotherObject) {
   return F(result, modulus);
 }
 
+F F::operator - () {
+  return F(-1, modulus) * F(this->getValue(), modulus);
+}
+
 F F::operator - (F anotherObject) {
   assert(modulus == anotherObject.modulus);
   mpz_class thisValue = getValue();

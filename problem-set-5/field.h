@@ -1,5 +1,8 @@
 #include <gmpxx.h>
 
+extern mpz_class MPZ_ONE;
+extern mpz_class MPZ_ZERO;
+extern mpz_class MPZ_TWO;
 mpz_class positiveModulo(mpz_class value, mpz_class modulus);
 
 class F {
@@ -23,6 +26,8 @@ class F {
     F operator + (F anotherObject);
 
     F operator - (F anotherObject);
+
+    F operator - ();
 
     F operator * (F anotherObject);
 

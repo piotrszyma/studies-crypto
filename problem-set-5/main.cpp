@@ -12,6 +12,8 @@
 
 #define ED_CURV_D -11
 
+gmp_randclass RANDOMNESS (gmp_randinit_default);
+
 
 // Edward curve def
 // x_2 + y_2 = 1 + d * x_2 * y_2.
@@ -38,6 +40,18 @@ auto edwardsAdd(std::pair<F, F> left, std::pair<F, F> right) {
   F x3 = (x1 * y2 + y1 * x2) / (one + d * x1 * x2 * y1 * y2);
   F y3 = (y1 * y2 - x1 * x2) / (one - d * x1 * y1 * x2 * y2);
   return std::pair<F, F>(x3, y3);
+}
+
+auto scalarMultiply(mpz_class scalar, F_PAIR vector) {
+  if (scalar == 0) {
+    return F_PAIR(vector.first.getFromModulus(0), vector.first.getFromModulus(1));
+  } else if (scalar == 1) {
+    return vector;
+  }
+  auto multiplied = scalarMultiply(scalar / 2, vector);
+  multiplied = edwardsAdd(multiplied, multiplied);
+  if ((scalar & 1) == 1) multiplied = edwardsAdd(vector, multiplied);
+  return multiplied;
 }
 
 auto scalarMultiply(int n, F_PAIR vector) {
@@ -91,6 +105,15 @@ auto modulusFactory(int modulus) {
 //   std::cout << modInv << std::endl;
 // };
 
+mpz_class getNextPrime(mpz_class n) {
+  mpz_t tmp;
+  mpz_init(tmp);
+  mpz_nextprime(tmp, n.get_mpz_t());
+  mpz_class tmp_class(tmp);
+  mpz_clear(tmp);
+  return tmp_class;
+}
+
 int getSeed() {
   unsigned long long int random_value = 0; //Declare value to store data into
   size_t size = sizeof(random_value); //Declare size of data
@@ -99,32 +122,97 @@ int getSeed() {
   return random_value;
 }
 
+// Edward curve def
+// x_2 + y_2 = 1 + d * x_2 * y_2.
+bool isPointOnCurve(F x, F y) {
+  F left = x * x + y * y;
+  F right = x.getOne() + x.getD() * x * x * y * y;
+  return left == right;
+}
+
+F_PAIR getRandomPointOnCurve(mpz_class modulus) {
+  int ctr;
+  mpz_class X(0), Y(0);
+  F F_X(MPZ_ZERO, modulus), F_Y(MPZ_ZERO, modulus);
+  for (;;) {
+    do {
+      X = RANDOMNESS.get_z_range(modulus);
+    } while (X == 0);
+    F_X = F(X, modulus);
+    F_Y = F(MPZ_ZERO, modulus);
+    ctr = 0;
+    do {
+      do {
+        Y = RANDOMNESS.get_z_range(modulus);
+      } while (Y == 0);
+      F_Y = F(Y, modulus);
+      ctr += 1;
+      if (ctr == 1000) break;
+    } while((!isPointOnCurve(F_X, F_Y)));
+    if (ctr < 1000) {
+      return {F(X, modulus), F(Y, modulus)};
+    }
+  }
+}
+
+void printPoint(F_PAIR point) {
+   std::cout << "(" << point.first.getValue().get_mpz_t() << ", ";
+   std::cout << point.second.getValue().get_mpz_t() << ")" << std::endl;
+}
+
+void performEncryption() {
+  RANDOMNESS.seed(getSeed());
+  mpz_class modulus = getNextPrime(RANDOMNESS.get_z_bits(10));
+
+  std::cout << "Modulus: " << modulus.get_mpz_t() << std::endl;
+
+  // ================== GEN ==================
+  // 1. Generate point P.
+  F_PAIR P_point = getRandomPointOnCurve(modulus);
+
+  // 2. Generate private key a.
+  mpz_class a_number = RANDOMNESS.get_z_range(modulus);
+
+  // 3. Generate public key. (R = aP)
+  F_PAIR R_point = scalarMultiply(a_number, P_point);
+
+  // ================== ENC ==================
+
+  // 1. Generate random k.
+  mpz_class k_number = RANDOMNESS.get_z_range(modulus);
+
+  // 2. Generate point Q. (Q = k * P)
+  F_PAIR Q_point = scalarMultiply(k_number, P_point);
+
+  // 3. Generate 'encryption point'. (kR = k * R)
+  F_PAIR kR_point = scalarMultiply(k_number, R_point);
+
+  // 4. Generate message. (point on curve)
+  F_PAIR message = getRandomPointOnCurve(modulus);
+  printPoint(message);
+
+  // 5. Encrypt message using x from kR = k * R = k * a * P.
+  F_PAIR cypher = edwardsAdd(message, kR_point);
+
+  // ================== DEC ==================
+
+  // 1. Get x using private key a and point Q. (aQ = a * Q = a * k * P)
+  F_PAIR aQ_point = scalarMultiply(a_number, Q_point);
+
+  // 2. Get aQ inverse. (aQ = k * a * P)
+  F_PAIR dec_aQ_point = F_PAIR(-aQ_point.first, aQ_point.second);
+
+  // 3. Decypher message.
+  F_PAIR dec_message = edwardsAdd(dec_aQ_point, cypher);
+
+  printPoint(dec_message);
+}
+
+
 int main(void) {
-  // gmp_randstate_t randomState;
-  // gmp_randinit_default(randomState);
-  // gmp_randseed_ui(randomState, getSeed());
-  // mpz_t randomNumber;
-  // mpz_urandomb(randomNumber, randomState, 256);
-
-  // F a = F(mpz_class(randomNumber), mpz_class(randomNumber));
-
-  // std::cout << a.getValue().get_mpz_t() << std::endl;
-
-  // auto F_1009 = modulusFactory(1009);
-  // auto genResult = gen();
-
-  // F_PAIR knownPoint = std::get<0>(genResult);
-  // F_PAIR publicKey = std::get<1>(genResult);
-  // int privateKey = std::get<2>(genResult);
-
-  // F message = F_1009(123);
-  // auto encResult = enc(message, publicKey, knownPoint);
-
-  // F cypher = std::get<0>(encResult);
-  // F_PAIR decPoint = std::get<1>(encResult);
-
-  // dec(cypher, privateKey, decPoint);
-
+  // for(int i =0;i<100;i++) {
+  performEncryption();
+  // }
 
   // ======================================================================
   //
