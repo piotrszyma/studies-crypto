@@ -7,9 +7,9 @@
 #include "operations.h"
 
 
-FieldNumber::FieldNumber(mpz_class value_, mpz_class modulus_) : value(positiveModulo(value_, modulus_)), modulus(modulus_) {};
+FieldNumber::FieldNumber(mpz_class value_, mpz_class modulus_) : value(EcOperations::positiveModulo(value_, modulus_)), modulus(modulus_) {};
 
-FieldNumber::FieldNumber(int value_, int modulus_) : value(mpz_class(positiveModulo(value_, modulus_))), modulus(mpz_class(modulus_)) {};
+FieldNumber::FieldNumber(int value_, int modulus_) : value(mpz_class(EcOperations::positiveModulo(value_, modulus_))), modulus(mpz_class(modulus_)) {};
 
 mpz_class FieldNumber::getValue() {
   return value;
@@ -24,7 +24,7 @@ FieldNumber FieldNumber::getFromModulus(mpz_class value_) {
 }
 
 FieldNumber FieldNumber::getOne() {
-  return FieldNumber(EcDefines::MPZ_ONE, modulus);
+  return FieldNumber(mpz_class(1), modulus);
 }
 
 FieldNumber FieldNumber::getD() {
@@ -66,14 +66,12 @@ FieldNumber FieldNumber::operator / (FieldNumber anotherNumber) {
   assert(modulus == anotherNumber.modulus);
   mpz_class result;
   mpz_class modulus_less_two;
-  mpz_sub(modulus_less_two.get_mpz_t(), modulus.get_mpz_t(), EcDefines::MPZ_TWO.get_mpz_t());
+  mpz_sub(modulus_less_two.get_mpz_t(), modulus.get_mpz_t(), mpz_class(2).get_mpz_t());
   mpz_powm(result.get_mpz_t(), anotherNumber.getValue().get_mpz_t(), modulus_less_two.get_mpz_t(), modulus.get_mpz_t());
   return FieldNumber(this->getValue(), modulus) * FieldNumber(result, modulus);
 }
 
 bool FieldNumber::operator == (FieldNumber anotherNumber) {
-  // std::cout << getValue().get_mpz_t() << std::endl;
-  // std::cout << anotherNumber.getValue().get_mpz_t() << std::endl;
   return mpz_cmp(getValue().get_mpz_t(), anotherNumber.getValue().get_mpz_t()) == 0;
 }
 
