@@ -1,41 +1,41 @@
+#ifndef FIELD_H
+#define FIELD_H
+
 #include <gmpxx.h>
 
-extern mpz_class MPZ_ONE;
-extern mpz_class MPZ_ZERO;
-extern mpz_class MPZ_TWO;
-mpz_class positiveModulo(mpz_class value, mpz_class modulus);
-
-class F {
+class FieldNumber {
   private:
     mpz_class value;
     mpz_class modulus;
   public:
-    F(mpz_class value_, mpz_class modulus_);
+    FieldNumber(mpz_class value_, mpz_class modulus_);
 
-    F(int value_, int modulus_);
+    FieldNumber(int value_, int modulus_);
 
     mpz_class getValue();
     mpz_class getModulus();
 
-    F getFromModulus(mpz_class value_);
+    FieldNumber getFromModulus(mpz_class value_);
 
-    F getOne();
+    FieldNumber getOne();
 
-    F getD();
+    FieldNumber getD();
 
-    F operator + (F anotherObject);
+    FieldNumber operator + (FieldNumber anotherNumber);
 
-    F operator - (F anotherObject);
+    FieldNumber operator - (FieldNumber anotherNumber);
 
-    F operator - ();
+    FieldNumber operator - ();
 
-    F operator * (F anotherObject);
+    FieldNumber operator * (FieldNumber anotherNumber);
 
-    F operator / (F anotherObject);
+    FieldNumber operator / (FieldNumber anotherNumber);
 
-    bool operator == (F anotherObject);
+    bool operator == (FieldNumber anotherNumber);
 
-    bool operator != (F anotherObject);
+    bool operator != (FieldNumber anotherNumber);
 };
 
-typedef std::pair<F, F> F_PAIR;
+typedef std::pair<FieldNumber, FieldNumber> FieldPoint;
+
+#endif //FIELD_H
