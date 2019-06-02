@@ -6,7 +6,6 @@
 
 #include <gmpxx.h>
 
-#include "defines.h"
 #include "field.h"
 #include "operations.h"
 #include "utils.h"
@@ -75,10 +74,13 @@ void performEncryptionProcess() {
 
   // 4. Generate message. (point on curve)
   FieldPoint message = EcUtils::getRandomPointOnCurve(FieldNumber::MODULUS);
+  std::cout << "Message:" << std::endl;
   EcUtils::printPoint(message);
 
   // 5. Encrypt message using x from kR = k * R = k * a * P.
   FieldPoint cypher = EcOperations::edwardsAdd(message, kR);
+  std::cout << "Cypher:" << std::endl;
+  EcUtils::printPoint(cypher);
 
   // ================== DEC ==================
 
@@ -91,38 +93,14 @@ void performEncryptionProcess() {
   // 3. Decypher message.
   FieldPoint dec_message = EcOperations::edwardsAdd(dec_aQ_point, cypher);
 
-  EcUtils::printPoint(dec_message);
+  std::cout << "Decrypted cypher:" << std::endl;
+  EcUtils::printPoint(message);
+
+  EcUtils::assertPointsEqual(message, dec_message);
 }
-
-
-// void performTesting() {
-//   // For the below tests D value equals -11.
-//   auto F_1009 = EcOperations::modulusFactory(1009);
-//   assert(EcDefines::EDWARDS_CURVE_D_PARAM == -11);
-//   assert(F_1009(-1) == F_1009(1008));
-//   assert(F_1009(6) != F_1009(5));
-//   assert(F_1009(101) + F_1009(1000) == F_1009(92));
-//   assert(F_1009(101) - F_1009(1000) == F_1009(110));
-//   assert(F_1009(101) * F_1009(1000) == F_1009(100));
-//   assert(F_1009(101) * F_1009(112) == F_1009(213));
-//   assert(F_1009(101) / F_1009(1000) == F_1009(213));
-
-//   FieldPoint P1 (F_1009(7), F_1009(415));
-//   FieldPoint P2 (F_1009(23), F_1009(487));
-//   FieldPoint result = EcOperations::edwardsAdd(P1, P2);
-
-//   assert(result.first.getValue() == mpz_class(944));
-//   assert(result.second.getValue() == mpz_class(175));
-
-//   FieldPoint multResult = EcOperations::scalarMultiply(5, result);
-//   assert(multResult.first.getValue() == 900);
-//   assert(multResult.second.getValue() == 799);
-// }
-
 
 int main(void) {
   setupConsts();
   performEncryptionProcess();
-
   return 0;
 };

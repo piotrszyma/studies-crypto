@@ -1,7 +1,6 @@
 #include <functional>
 
 #include "field.h"
-#include "defines.h"
 
 namespace EcOperations {
   FieldPoint edwardsAdd(FieldPoint left, FieldPoint right) {
@@ -9,7 +8,7 @@ namespace EcOperations {
     FieldNumber y1 = left.second;
     FieldNumber x2 = right.first;
     FieldNumber y2 = right.second;
-    FieldNumber one = left.first.getOne();
+    FieldNumber one = left.first.getN(1);
     FieldNumber d = left.first.getD();
 
     FieldNumber x3 = (x1 * y2 + y1 * x2) / (one + d * x1 * x2 * y1 * y2);
@@ -19,7 +18,7 @@ namespace EcOperations {
 
   FieldPoint scalarMultiply(mpz_class scalar, FieldPoint vector) {
     if (scalar == 0) {
-      return FieldPoint(vector.first.getFromModulus(0), vector.first.getFromModulus(1));
+      return FieldPoint(vector.first.getN(0), vector.first.getN(1));
     } else if (scalar == 1) {
       return vector;
     }
@@ -32,7 +31,7 @@ namespace EcOperations {
   FieldPoint scalarMultiply(int n, FieldPoint vector) {
     assert(n >= 0);
     if (n == 0) {
-      return FieldPoint(vector.first.getFromModulus(0), vector.first.getFromModulus(1));
+      return FieldPoint(vector.first.getN(0), vector.first.getN(1));
     } else if (n == 1) {
       return vector;
     }
@@ -66,23 +65,23 @@ namespace EcOperations {
     mpz_class iVal;
     mpz_class iExp = (y.getModulus() - 1) / 4;
     mpz_powm(iVal.get_mpz_t(), mpz_class(2).get_mpz_t(), iExp.get_mpz_t(), y.getModulus().get_mpz_t());
-    FieldNumber I = y.getFromModulus(iVal);
+    FieldNumber I = y.getN(iVal);
     // End setup I
 
-    FieldNumber xx = (y * y - y.getOne()) / (y.getD() * y * y - y.getOne());
+    FieldNumber xx = (y * y - y.getN(1)) / (y.getD() * y * y - y.getN(1));
 
     mpz_class exponent = (y.getModulus() + 3) / 8;
     mpz_class xVal;
     mpz_powm(xVal.get_mpz_t(), xx.getValue().get_mpz_t(), exponent.get_mpz_t(), y.getModulus().get_mpz_t());
 
-    FieldNumber x = y.getFromModulus(xVal);
+    FieldNumber x = y.getN(xVal);
 
     if ((x * x - xx) != y.getN(0)) {
       x = x * I;
     }
 
     if (x % y.getN(2) != y.getN(0)) {
-      x = x.getFromModulus(x.getModulus()) - x;
+      x = x.getN(x.getModulus()) - x;
     }
 
     return x;

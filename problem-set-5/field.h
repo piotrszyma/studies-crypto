@@ -20,12 +20,7 @@ class FieldNumber {
     mpz_class getValue();
     mpz_class getModulus();
 
-    FieldNumber getFromModulus(mpz_class value_);
-
-    FieldNumber getOne();
-
-    FieldNumber getZero();
-
+    FieldNumber getN(mpz_class value);
     FieldNumber getN(int value);
 
     FieldNumber getD();

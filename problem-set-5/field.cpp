@@ -2,7 +2,6 @@
 #include <assert.h>
 #include <tuple>
 
-#include "defines.h"
 #include "field.h"
 #include "operations.h"
 
@@ -10,12 +9,9 @@ mpz_class FieldNumber::D_VALUE;
 mpz_class FieldNumber::I_VALUE;
 mpz_class FieldNumber::MODULUS;
 
-FieldNumber::FieldNumber(mpz_class value_, mpz_class modulus_) : value(EcOperations::positiveModulo(value_, modulus_)), modulus(modulus_) {};
-
-FieldNumber::FieldNumber(mpz_class value_) : value(EcOperations::positiveModulo(value_, FieldNumber::MODULUS)), modulus(FieldNumber::MODULUS) {};
-
 FieldNumber::FieldNumber() : value(mpz_class(EcOperations::positiveModulo(0, FieldNumber::MODULUS))), modulus(FieldNumber::MODULUS) {};
-
+FieldNumber::FieldNumber(mpz_class value_) : value(EcOperations::positiveModulo(value_, FieldNumber::MODULUS)), modulus(FieldNumber::MODULUS) {};
+FieldNumber::FieldNumber(mpz_class value_, mpz_class modulus_) : value(EcOperations::positiveModulo(value_, modulus_)), modulus(modulus_) {};
 FieldNumber::FieldNumber(int value_, int modulus_) : value(mpz_class(EcOperations::positiveModulo(value_, modulus_))), modulus(mpz_class(modulus_)) {};
 
 mpz_class FieldNumber::getValue() {
@@ -26,20 +22,12 @@ mpz_class FieldNumber::getModulus() {
   return modulus;
 }
 
-FieldNumber FieldNumber::getFromModulus(mpz_class value_) {
-  return FieldNumber(value_, modulus);
-}
-
-FieldNumber FieldNumber::getOne() {
-  return FieldNumber(mpz_class(1), modulus);
+FieldNumber FieldNumber::getN(mpz_class value) {
+  return FieldNumber(value, modulus);
 }
 
 FieldNumber FieldNumber::getN(int value) {
   return FieldNumber(mpz_class(value), modulus);
-}
-
-FieldNumber FieldNumber::getZero() {
-  return FieldNumber(mpz_class(0), modulus);
 }
 
 FieldNumber FieldNumber::getD() {
