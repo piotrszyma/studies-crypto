@@ -12,6 +12,9 @@ namespace EcOperations {
 
   mpz_class positiveModulo(mpz_class value, mpz_class modulus);
 
+  mpz_class inverse(mpz_class value, mpz_class modulus);
+  FieldNumber xRecover(FieldNumber y);
+
   // std::function<FieldNumber (mpz_class)> modulusFactory(mpz_class modulus);
   // std::function<FieldNumber (mpz_class)> modulusFactory(int modulus);
 }

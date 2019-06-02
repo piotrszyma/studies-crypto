@@ -3,6 +3,7 @@
 
 #include "utils.h"
 #include "field.h"
+#include "operations.h"
 #include "defines.h"
 
 namespace EcUtils {
@@ -31,27 +32,16 @@ namespace EcUtils {
   FieldPoint getRandomPointOnCurve(mpz_class modulus) {
     gmp_randclass RANDOMNESS (gmp_randinit_default);
     RANDOMNESS.seed(getSeed());
-    int ctr;
     mpz_class X(0), Y(0);
-    FieldNumber F_X(mpz_class(0), modulus), F_Y(mpz_class(0), modulus);
-    for (;;) {
-      do {
-        X = RANDOMNESS.get_z_range(modulus);
-      } while (X == 0);
-      F_X = FieldNumber(X, modulus);
-      F_Y = FieldNumber(mpz_class(0), modulus);
-      ctr = 0;
-      do {
-        do {
-          Y = RANDOMNESS.get_z_range(modulus);
-        } while (Y == 0);
-        F_Y = FieldNumber(Y, modulus);
-        ctr += 1;
-        if (ctr == 1000) break;
-      } while((!isPointOnCurve(F_X, F_Y)));
-      if (ctr < 1000) {
-        return {FieldNumber(X, modulus), FieldNumber(Y, modulus)};
-      }
-    }
+    FieldNumber F_Y;
+    FieldNumber F_X;
+
+    do {
+      mpz_class random = RANDOMNESS.get_z_range(FieldNumber::MODULUS);
+      F_Y = FieldNumber(random);
+      F_X = EcOperations::xRecover(F_Y);
+    } while(!isPointOnCurve(F_X, F_Y));
+
+    return FieldPoint(F_X, F_Y);
   }
 }

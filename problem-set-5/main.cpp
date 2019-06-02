@@ -14,56 +14,76 @@
 
 // Edward curve def
 // x_2 + y_2 = 1 + d * x_2 * y_2.
+mpz_class MODULUS;
+mpz_class D_VALUE;
+mpz_class I_VALUE;
 
-mpz_class getNextPrime(mpz_class n) {
-  mpz_t tmp;
-  mpz_init(tmp);
-  mpz_nextprime(tmp, n.get_mpz_t());
-  mpz_class tmp_class(tmp);
-  mpz_clear(tmp);
-  return tmp_class;
+void setupConsts() {
+  // Modulo.
+  mpz_ui_pow_ui(MODULUS.get_mpz_t(), 2, 255);
+  mpz_sub_ui(MODULUS.get_mpz_t(), MODULUS.get_mpz_t(), 19);
+
+  // D.
+  D_VALUE = -121665;
+  mpz_class divisor = 121666;
+  mpz_invert(divisor.get_mpz_t(), divisor.get_mpz_t(), MODULUS.get_mpz_t());
+  D_VALUE *= divisor;
+
+  // I.
+  mpz_class two = 2;
+  mpz_class exponent(MODULUS);
+  exponent = (exponent - 1) / 4;
+  mpz_powm(I_VALUE.get_mpz_t(), mpz_class(2).get_mpz_t(), exponent.get_mpz_t(), MODULUS.get_mpz_t());
+
+  FieldNumber::D_VALUE = D_VALUE;
+  FieldNumber::I_VALUE = I_VALUE;
+  FieldNumber::MODULUS = MODULUS;
 }
 
+FieldPoint generateGenerator() {
+  FieldNumber y = FieldNumber(4) / FieldNumber(5);
+  FieldNumber x = EcOperations::xRecover(y);
+  return FieldPoint(x, y);
+}
 
 void performEncryptionProcess() {
+
   gmp_randclass RANDOMNESS (gmp_randinit_default);
   RANDOMNESS.seed(EcUtils::getSeed());
-  mpz_class modulus = getNextPrime(RANDOMNESS.get_z_bits(10));
-
-  std::cout << "Modulus: " << modulus.get_mpz_t() << std::endl;
 
   // ================== GEN ==================
-  // 1. Generate point P.
-  FieldPoint P_point = EcUtils::getRandomPointOnCurve(modulus);
+  // 1. Get point P.
+  FieldPoint P = generateGenerator();
+  assert(EcUtils::isPointOnCurve(P.first, P.second));
 
   // 2. Generate private key a.
-  mpz_class a_number = RANDOMNESS.get_z_range(modulus);
+  mpz_class a = RANDOMNESS.get_z_range(FieldNumber::MODULUS);
 
   // 3. Generate public key. (R = aP)
-  FieldPoint R_point = EcOperations::scalarMultiply(a_number, P_point);
+  FieldPoint R_point = EcOperations::scalarMultiply(a, P);
 
   // ================== ENC ==================
 
   // 1. Generate random k.
-  mpz_class k_number = RANDOMNESS.get_z_range(modulus);
+  mpz_class k = RANDOMNESS.get_z_range(FieldNumber::MODULUS);
 
   // 2. Generate point Q. (Q = k * P)
-  FieldPoint Q_point = EcOperations::scalarMultiply(k_number, P_point);
+  FieldPoint Q = EcOperations::scalarMultiply(k, P);
 
   // 3. Generate 'encryption point'. (kR = k * R)
-  FieldPoint kR_point = EcOperations::scalarMultiply(k_number, R_point);
+  FieldPoint kR = EcOperations::scalarMultiply(k, R_point);
 
   // 4. Generate message. (point on curve)
-  FieldPoint message = EcUtils::getRandomPointOnCurve(modulus);
+  FieldPoint message = EcUtils::getRandomPointOnCurve(FieldNumber::MODULUS);
   EcUtils::printPoint(message);
 
   // 5. Encrypt message using x from kR = k * R = k * a * P.
-  FieldPoint cypher = EcOperations::edwardsAdd(message, kR_point);
+  FieldPoint cypher = EcOperations::edwardsAdd(message, kR);
 
   // ================== DEC ==================
 
   // 1. Get x using private key a and point Q. (aQ = a * Q = a * k * P)
-  FieldPoint aQ_point = EcOperations::scalarMultiply(a_number, Q_point);
+  FieldPoint aQ_point = EcOperations::scalarMultiply(a, Q);
 
   // 2. Get aQ inverse. (aQ = k * a * P)
   FieldPoint dec_aQ_point = FieldPoint(-aQ_point.first, aQ_point.second);
@@ -101,6 +121,7 @@ void performEncryptionProcess() {
 
 
 int main(void) {
+  setupConsts();
   performEncryptionProcess();
 
   return 0;

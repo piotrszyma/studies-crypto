@@ -8,8 +8,13 @@ class FieldNumber {
     mpz_class value;
     mpz_class modulus;
   public:
-    FieldNumber(mpz_class value_, mpz_class modulus_);
+    static mpz_class D_VALUE;
+    static mpz_class I_VALUE;
+    static mpz_class MODULUS;
 
+    FieldNumber();
+    FieldNumber(mpz_class value_);
+    FieldNumber(mpz_class value_, mpz_class modulus_);
     FieldNumber(int value_, int modulus_);
 
     mpz_class getValue();
@@ -18,6 +23,10 @@ class FieldNumber {
     FieldNumber getFromModulus(mpz_class value_);
 
     FieldNumber getOne();
+
+    FieldNumber getZero();
+
+    FieldNumber getN(int value);
 
     FieldNumber getD();
 
@@ -30,6 +39,8 @@ class FieldNumber {
     FieldNumber operator * (FieldNumber anotherNumber);
 
     FieldNumber operator / (FieldNumber anotherNumber);
+
+    FieldNumber operator % (FieldNumber anotherNumber);
 
     bool operator == (FieldNumber anotherNumber);
 
