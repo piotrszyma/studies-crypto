@@ -1,2 +1,4 @@
 py/
 py_example/
+*.o
+out

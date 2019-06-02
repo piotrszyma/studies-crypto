@@ -10,7 +10,6 @@
 #include "operations.h"
 #include "utils.h"
 
-
 // Edward curve def
 // x_2 + y_2 = 1 + d * x_2 * y_2.
 mpz_class MODULUS;
