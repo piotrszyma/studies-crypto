@@ -19,35 +19,35 @@ from Crypto.Util import Padding
 C_PARAM = 1
 KEY_SIZE = 16
 N = 2**16  # number of puzzles
-KNOWN_PART = os.urandom(15)
+KNOWN_PART = os.urandom(14)
 
 KEY_ID_LEN = 48  # Confirms good key_id len
 
 
 def get_full_key(known_part):
-  return known_part + os.urandom(16 - len(known_part))
+  return known_part + os.urandom(KEY_SIZE - len(known_part))
 
 
 def encrypt(message, secret):
-  iv = os.urandom(16)
-  padded_message = Padding.pad(message, 16)
+  iv = os.urandom(KEY_SIZE)
+  padded_message = Padding.pad(message, KEY_SIZE)
   aes_obj = AES.new(secret, AES.MODE_CBC, iv)
   cypher = aes_obj.encrypt(padded_message)
   return cypher + iv
 
 
 def decrypt(message, secret):
-  cypher, iv = message[:-16], message[-16:]
+  cypher, iv = message[:-KEY_SIZE], message[-KEY_SIZE:]
   aes_obj = AES.new(secret, AES.MODE_CBC, iv)
   message = aes_obj.decrypt(cypher)
-  return Padding.unpad(message, 16)
+  return Padding.unpad(message, KEY_SIZE)
 
 
 KeyEncryption = collections.namedtuple('KeyEncryption', 'key encryption')
 
 
 def generate_single_puzzle(puzzle_id, k1, k2, constant):
-  puzzle_id_bytes = puzzle_id.to_bytes(16, byteorder='big')
+  puzzle_id_bytes = puzzle_id.to_bytes(KEY_SIZE, byteorder='big')
   key_id = encrypt(puzzle_id_bytes, k1)
   key = encrypt(key_id, k2)
   # id, key, constant
@@ -83,6 +83,7 @@ def choose_decrypt_and_return_id(puzzles, constant):
   chosen_puzzle = random.choice(puzzles)
 
   size = KEY_SIZE - len(KNOWN_PART)
+  print(f'Keys space size: {(2**8)**size}')
   for possible_unknown_key_part in _get_possible_keys(size):
     possible_key = KNOWN_PART + possible_unknown_key_part
     try:
