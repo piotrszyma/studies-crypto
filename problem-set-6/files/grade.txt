@@ -1,4 +1,0 @@
-Student number: 123456
-Problem number: 5/1
-Grade: 0
-
