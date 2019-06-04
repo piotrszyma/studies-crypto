@@ -84,7 +84,6 @@ def gram_schmidt(g, m, mu, B):
     B[i] = scalar_product(b_i_star, b_i_star)
 
 
-# reduce
 def reduce(g, mu, k, l):
   row = len(g)
 
@@ -169,30 +168,6 @@ def lll_reduction(n, lc=Fraction(3, 4)):
         return g
 
       k = k + 1
-
-
-b = [
-    [1, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 1, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 1, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 1, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 1, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 1, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 1, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 1, 0],
-    [82, 123, 287, 83, 248, 373, 10, 471, -548],
-]
-
-# out = lll_reduction(b , lc=Fraction(3, 4))
-
-# out = np.array(out)
-
-# for column in out.T:
-#   if all(e in (0, 1) for e in column):
-#     print(column)
-
-# M[:, 0] - 0 col
-# M[0, :] - 0 row
 
 
 def mh_attack(public_key, message):
