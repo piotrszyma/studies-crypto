@@ -107,8 +107,8 @@ def main():
   puzzles = [key_enc.encryption for key_enc in id_to_key_enc.values()]
   generated = time.time()
   print(f'Generated in {(generated - start):.2f}s')
-  # Receiver.
 
+  # Receiver.
   chosen_key_id, chosen_key = choose_decrypt_and_return_id(puzzles, constant)
   cracked = time.time() - generated
 

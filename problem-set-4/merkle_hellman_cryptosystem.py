@@ -100,7 +100,7 @@ def main():
       message_bytes = sys.argv[2].encode()
     else:
       message_bytes = ''.join(random.choices(string.ascii_uppercase,
-                                             k=8)).encode()
+                                             k=16)).encode()
     print(f'Will encrypt some random string: {message_bytes}')
   else:
     print('Type in message to encrypt: ', end='')
