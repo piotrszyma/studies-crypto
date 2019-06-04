@@ -56,6 +56,9 @@ coeff=INTEGER:{coeff}""")
       stderr=subprocess.PIPE,
     )
     print(result.stdout.decode(), end='')
+    subprocess.run(
+      ['bash', '-c', 'rm newkey.der']
+    )
 
 if __name__ == "__main__":
   main()
